@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -11,7 +10,7 @@ import LiveSession from './pages/LiveSession';
 import Dua from './pages/Dua';
 import { UserSettings } from './types';
 import { DEFAULT_SETTINGS } from './constants';
-import { Moon, Calendar as CalendarIcon, Settings as SettingsIcon, Info, Menu, X, Smartphone, BookOpen, MessageCircle, Mic, Heart } from 'lucide-react';
+import { Moon, Calendar as CalendarIcon, Settings as SettingsIcon, BookOpen, MessageCircle, Mic, Heart, Menu, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -23,14 +22,6 @@ const App: React.FC = () => {
     setSettings(newSettings);
     localStorage.setItem('ramadan_settings', JSON.stringify(newSettings));
   };
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js').catch(console.error);
-      });
-    }
-  }, []);
 
   return (
     <HashRouter>
@@ -59,8 +50,8 @@ const Layout: React.FC<{ children: React.ReactNode; settings: UserSettings }> = 
     { path: '/calendar', label: 'التقويم', icon: <CalendarIcon size={20} /> },
     { path: '/quran', label: 'المصحف', icon: <BookOpen size={20} /> },
     { path: '/dua', label: 'الأدعية', icon: <Heart size={20} /> },
-    { path: '/ai-chat', label: 'المساعد الذكي', icon: <MessageCircle size={20} /> },
-    { path: '/live', label: 'محادثة صوتية', icon: <Mic size={20} /> },
+    { path: '/ai-chat', label: 'المساعد', icon: <MessageCircle size={20} /> },
+    { path: '/live', label: 'صوت مباشر', icon: <Mic size={20} /> },
     { path: '/settings', label: 'الإعدادات', icon: <SettingsIcon size={20} /> },
   ];
 
@@ -74,7 +65,7 @@ const Layout: React.FC<{ children: React.ReactNode; settings: UserSettings }> = 
           <h1 className="text-xl font-amiri font-bold text-[#d4af37]">أوقات رمضان</h1>
         </Link>
 
-        <nav className="hidden md:flex gap-2 lg:gap-4">
+        <nav className="hidden md:flex gap-1 lg:gap-3">
           {navLinks.map(link => (
             <Link
               key={link.path}
@@ -91,7 +82,7 @@ const Layout: React.FC<{ children: React.ReactNode; settings: UserSettings }> = 
           ))}
         </nav>
 
-        <button className="md:hidden p-2 text-gray-400 btn-large flex items-center justify-center" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <button className="md:hidden p-2 text-gray-400" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </header>
