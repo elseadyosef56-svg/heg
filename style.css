@@ -1,0 +1,90 @@
+body {
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.font-amiri {
+    font-family: 'Amiri', serif;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gold-glow {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+/* Mobile Readability */
+@media (max-width: 640px) {
+    body {
+        font-size: 17px;
+    }
+    .dua-text {
+        font-size: 1.25rem !important;
+        line-height: 2.2 !important;
+    }
+    button, a, select, input {
+        min-height: 48px !important;
+    }
+}
+
+.dua-text {
+    line-height: 2;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Transitions */
+.page-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #050a18;
+}
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+@media print {
+    .no-print { display: none !important; }
+    body { background: white !important; color: black !important; }
+}
+
+.paper-mode {
+    background-color: #f5f1e6 !important;
+    color: #2c1e14 !important;
+    border: 8px solid #e8dfc4 !important;
+}
+
+/* Pulse animation for Live Session */
+.animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+}

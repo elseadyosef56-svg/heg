@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserSettings, PrayerData } from '../types';
-import { API_BASE, PRAYER_NAMES, ARAB_COUNTRIES } from '../constants';
-import { MapPin, Bell, RefreshCw, Loader2, Moon, Sun, ArrowRightLeft, Clock, CalendarDays } from 'lucide-react';
+import { API_BASE, PRAYER_NAMES } from '../constants';
+import { RefreshCw, Loader2, Moon, Sun, Navigation, Clock, Sparkles } from 'lucide-react';
 
 interface HomeProps {
   settings: UserSettings;
@@ -13,16 +13,27 @@ const Home: React.FC<HomeProps> = ({ settings }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
+  const [locationName, setLocationName] = useState({ city: settings.city, country: settings.country });
 
-  const fetchTimings = async () => {
+  const fetchTimings = async (lat?: number, lng?: number) => {
     setLoading(true);
     setError(null);
     try {
-      const url = `${API_BASE}/timingsByCity?city=${encodeURIComponent(settings.city)}&country=${encodeURIComponent(settings.country)}&method=${settings.method}`;
+      let url = "";
+      if (lat && lng) {
+        url = `${API_BASE}/timings?latitude=${lat}&longitude=${lng}&method=${settings.method}`;
+      } else {
+        url = `${API_BASE}/timingsByCity?city=${encodeURIComponent(settings.city)}&country=${encodeURIComponent(settings.country)}&method=${settings.method}`;
+      }
+      
       const response = await fetch(url);
       const json = await response.json();
       if (json.code === 200) {
         setData(json.data);
+        if (lat && lng) {
+          const city = json.data.meta.timezone.split('/')[1]?.replace('_', ' ') || "موقعي الحالي";
+          setLocationName({ city, country: "" });
+        }
       } else {
         throw new Error(json.status);
       }
@@ -34,7 +45,16 @@ const Home: React.FC<HomeProps> = ({ settings }) => {
   };
 
   useEffect(() => {
-    fetchTimings();
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetchTimings(position.coords.latitude, position.coords.longitude);
+        },
+        () => fetchTimings()
+      );
+    } else {
+      fetchTimings();
+    }
   }, [settings.city, settings.country, settings.method]);
 
   useEffect(() => {
@@ -47,17 +67,13 @@ const Home: React.FC<HomeProps> = ({ settings }) => {
     const [hours, minutes] = targetTimeStr.split(':').map(Number);
     const target = new Date(now);
     target.setHours(hours, minutes, 0, 0);
-    
-    if (target < now) {
-      target.setDate(target.getDate() + 1);
-    }
-    
+    if (target < now) target.setDate(target.getDate() + 1);
     const diff = target.getTime() - now.getTime();
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return { h, m, s };
+    return {
+      h: Math.floor(diff / (1000 * 60 * 60)),
+      m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      s: Math.floor((diff % (1000 * 60)) / 1000)
+    };
   };
 
   const isRamadan = data?.date.hijri.month.number === 9;
@@ -65,132 +81,91 @@ const Home: React.FC<HomeProps> = ({ settings }) => {
   const imsakTime = data?.timings.Imsak;
   const iftarCountdown = getCountdown(iftarTime || '');
   const imsakCountdown = getCountdown(imsakTime || '');
-  const countryName = ARAB_COUNTRIES.find(c => c.code === settings.country)?.name || settings.country;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      {/* Hero Section Reverted */}
-      <section className="relative h-72 md:h-96 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
+      {/* Hero Section */}
+      <section className="relative h-72 md:h-96 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/10">
         <img 
           src={isRamadan 
             ? "https://images.unsplash.com/photo-1542662565-7e4b66bae529?auto=format&fit=crop&q=80&w=1200" 
             : "https://images.unsplash.com/photo-1466442929976-97f336a657be?auto=format&fit=crop&q=80&w=1200"} 
           alt="Header Background"
-          className="w-full h-full object-cover scale-105"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050a18] via-[#050a18]/40 to-transparent"></div>
         
-        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-right space-y-2">
-            <h2 className="text-4xl md:text-6xl font-amiri font-bold text-white drop-shadow-lg">
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+          <div className="text-center md:text-right space-y-1">
+            <h2 className="text-4xl md:text-7xl font-amiri font-bold text-white drop-shadow-lg">
               {isRamadan ? "رمضان مبارك" : "أوقات رمضان"}
             </h2>
-            <p className="text-[#d4af37] text-xl md:text-2xl font-medium drop-shadow-md">
+            <p className="text-[#d4af37] text-xl md:text-3xl font-medium drop-shadow-md">
               {data?.date.hijri.day} {data?.date.hijri.month.ar} {data?.date.hijri.year} هـ
             </p>
           </div>
-          <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4 text-white border border-white/20">
-            <div className="bg-[#d4af37] p-2 rounded-lg">
-              <MapPin size={20} className="text-[#050a18]" />
+          <div className="glass px-6 py-4 rounded-[2rem] flex items-center gap-4 text-white border border-white/20 shadow-xl">
+            <div className="bg-[#d4af37] p-3 rounded-2xl">
+              <Navigation size={22} className="text-[#050a18]" />
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-400">الموقع المختار</div>
-              <div className="font-bold text-lg">{settings.city}, {countryName}</div>
+              <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">الموقع</div>
+              <div className="font-bold text-lg md:text-2xl">{locationName.city}</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Ramadan Highlights Section */}
-      {isRamadan ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass p-8 rounded-3xl border-r-8 border-r-[#d4af37] shadow-xl relative overflow-hidden group">
-            <div className="absolute -left-10 -top-10 w-32 h-32 bg-[#d4af37]/10 rounded-full blur-3xl group-hover:bg-[#d4af37]/20 transition-all"></div>
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Moon className="text-[#d4af37]" />
-                موعد الإفطار
-              </h3>
-              <div className="text-[#d4af37] font-mono text-xl font-bold bg-[#d4af37]/10 px-4 py-1 rounded-full">
-                {iftarTime}
-              </div>
-            </div>
-            <div className="flex justify-between items-center bg-black/20 p-6 rounded-2xl">
-              <TimeDigit value={iftarCountdown?.h || 0} label="ساعة" color="#d4af37" />
-              <span className="text-3xl font-bold text-[#d4af37]/40">:</span>
-              <TimeDigit value={iftarCountdown?.m || 0} label="دقيقة" color="#d4af37" />
-              <span className="text-3xl font-bold text-[#d4af37]/40">:</span>
-              <TimeDigit value={iftarCountdown?.s || 0} label="ثانية" color="#d4af37" />
+      {/* Ramadan Badge & Highlights */}
+      <div className="relative pt-6">
+        {!isRamadan && (
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+            <div className="bg-gradient-to-r from-[#d4af37] to-orange-500 text-[#050a18] px-8 py-3 rounded-full font-bold shadow-2xl flex items-center gap-2 border-2 border-white/20 whitespace-nowrap animate-pulse">
+              <Sparkles size={20} />
+              <span>قريباً في رمضان</span>
             </div>
           </div>
+        )}
 
-          <div className="glass p-8 rounded-3xl border-r-8 border-r-orange-500 shadow-xl relative overflow-hidden group">
-            <div className="absolute -left-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all"></div>
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Sun className="text-orange-500" />
-                موعد الإمساك
-              </h3>
-              <div className="text-orange-500 font-mono text-xl font-bold bg-orange-500/10 px-4 py-1 rounded-full">
-                {imsakTime}
+        {isRamadan ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <HighlightCard title="موعد الإفطار" time={iftarTime || ''} countdown={iftarCountdown} icon={<Moon className="text-[#d4af37]" />} color="#d4af37" />
+            <HighlightCard title="موعد الإمساك" time={imsakTime || ''} countdown={imsakCountdown} icon={<Sun className="text-orange-500" />} color="#f97316" />
+          </div>
+        ) : (
+          <div className="glass p-10 md:p-16 rounded-[3rem] border border-[#d4af37]/20 shadow-2xl text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-[#d4af37]/5 group-hover:bg-[#d4af37]/10 transition-colors"></div>
+            <div className="relative z-10 space-y-6">
+               <div className="flex justify-center">
+                 <div className="w-20 h-20 bg-[#d4af37]/10 rounded-[2rem] flex items-center justify-center text-[#d4af37] shadow-inner">
+                   <Moon size={40} />
+                 </div>
               </div>
-            </div>
-            <div className="flex justify-between items-center bg-black/20 p-6 rounded-2xl">
-              <TimeDigit value={imsakCountdown?.h || 0} label="ساعة" color="#f97316" />
-              <span className="text-3xl font-bold text-orange-500/40">:</span>
-              <TimeDigit value={imsakCountdown?.m || 0} label="دقيقة" color="#f97316" />
-              <span className="text-3xl font-bold text-orange-500/40">:</span>
-              <TimeDigit value={imsakCountdown?.s || 0} label="ثانية" color="#f97316" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="glass p-8 md:p-12 rounded-[2.5rem] border border-[#d4af37]/20 shadow-2xl relative overflow-hidden group text-center">
-          <div className="absolute top-6 left-6">
-             <span className="bg-[#d4af37] text-[#050a18] text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
-               قريباً في رمضان
-             </span>
-          </div>
-          <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="flex justify-center gap-4">
-               <div className="w-16 h-16 bg-[#d4af37]/10 rounded-2xl flex items-center justify-center text-[#d4af37] shadow-xl border border-[#d4af37]/20">
-                 <Moon size={32} />
-               </div>
-               <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 shadow-xl border border-orange-500/20">
-                 <Sun size={32} />
-               </div>
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-3xl font-amiri font-bold text-white">مواعيد الإفطار والإمساك</h3>
-              <p className="text-gray-400 max-w-lg mx-auto leading-relaxed text-lg">
-                سيتم تفعيل عدادات الإفطار والإمساك التنازلية تلقائياً فور دخول شهر رمضان المبارك. نسأل الله أن يبلغنا وإياكم الشهر الفضيل.
+              <h3 className="text-3xl md:text-5xl font-amiri font-bold text-white">ترقبوا إمساكية الشهر الفضيل</h3>
+              <p className="text-gray-400 max-w-xl mx-auto leading-relaxed text-base md:text-xl">
+                سيتم تفعيل العداد التنازلي لمواعيد الإفطار والإمساك فور ثبوت رؤية هلال شهر رمضان المبارك لعام 1446هـ.
               </p>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* All Prayers Section */}
-      <section className="pt-4">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-            <RefreshCw size={24} className={`text-[#d4af37] ${loading ? 'animate-spin' : ''}`} />
-            مواقيت الصلاة لليوم
+      {/* Prayer Times List */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+          <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+            <Clock size={28} className="text-[#d4af37]" />
+            مواقيت الصلاة اليوم
           </h3>
+          {loading && <Loader2 className="animate-spin text-[#d4af37]" size={24} />}
         </div>
         
-        {loading ? (
-          <div className="h-48 flex flex-col items-center justify-center gap-4 glass rounded-3xl">
-            <Loader2 className="animate-spin text-[#d4af37]" size={48} />
-          </div>
-        ) : error ? (
-          <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-3xl text-center">
-            <p className="text-red-200 mb-4">{error}</p>
-            <button onClick={fetchTimings} className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-xl text-white font-bold transition-all">تحديث</button>
+        {error ? (
+          <div className="bg-red-500/10 border border-red-500/30 p-10 rounded-[2rem] text-center">
+            <p className="text-red-200 text-lg">{error}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {data && Object.entries(data.timings)
               .filter(([key]) => ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(key))
               .map(([key, value]) => (
@@ -201,37 +176,55 @@ const Home: React.FC<HomeProps> = ({ settings }) => {
       </section>
 
       <div className="text-center pt-4">
-        <a href="#/settings" className="inline-flex items-center gap-2 text-gray-400 hover:text-[#d4af37] transition-all bg-white/5 px-6 py-3 rounded-full border border-white/5">
-          <ArrowRightLeft size={16} />
-          تعديل الموقع أو طريقة الحساب
-        </a>
+        <button 
+          onClick={() => fetchTimings()}
+          className="inline-flex items-center gap-3 text-gray-400 hover:text-[#d4af37] transition-all bg-white/5 hover:bg-white/10 px-8 py-4 rounded-full border border-white/5 text-base font-bold btn-large"
+        >
+          <RefreshCw size={20} />
+          تحديث البيانات
+        </button>
       </div>
     </div>
   );
 };
 
+const HighlightCard: React.FC<{ title: string, time: string, countdown: any, icon: React.ReactNode, color: string }> = ({ title, time, countdown, icon, color }) => (
+  <div className="glass p-8 md:p-10 rounded-[2.5rem] border-r-8 shadow-xl overflow-hidden relative" style={{ borderRightColor: color }}>
+    <div className="flex justify-between items-start mb-6">
+      <h3 className="text-xl md:text-3xl font-bold text-white flex items-center gap-3">
+        {icon} {title}
+      </h3>
+      <div className="font-mono text-xl md:text-2xl font-bold px-4 py-2 rounded-2xl bg-white/5" style={{ color }}>
+        {time}
+      </div>
+    </div>
+    <div className="flex justify-between items-center bg-black/30 p-6 md:p-8 rounded-[2rem]">
+      <TimeDigit value={countdown?.h || 0} label="ساعة" color={color} />
+      <span className="text-3xl md:text-5xl opacity-30">:</span>
+      <TimeDigit value={countdown?.m || 0} label="دقيقة" color={color} />
+      <span className="text-3xl md:text-5xl opacity-30">:</span>
+      <TimeDigit value={countdown?.s || 0} label="ثانية" color={color} />
+    </div>
+  </div>
+);
+
 const TimeDigit: React.FC<{ value: number; label: string; color: string }> = ({ value, label, color }) => (
-  <div className="text-center min-w-[60px]">
-    <div className="text-4xl md:text-5xl font-mono font-bold tabular-nums" style={{ color }}>
+  <div className="text-center min-w-[60px] md:min-w-[80px]">
+    <div className="text-3xl md:text-5xl font-mono font-bold tabular-nums" style={{ color }}>
       {String(value).padStart(2, '0')}
     </div>
-    <div className="text-[10px] text-gray-500 mt-1 font-bold uppercase tracking-widest">{label}</div>
+    <div className="text-[10px] md:text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">{label}</div>
   </div>
 );
 
 const PrayerCard: React.FC<{ name: string; time: string; type: string; isRamadan: boolean }> = ({ name, time, type, isRamadan }) => {
-  const isIftar = type === 'Maghrib' && isRamadan;
-  const isFajr = type === 'Fajr' && isRamadan;
+  const isSpecial = (type === 'Maghrib' || type === 'Fajr') && isRamadan;
   return (
-    <div className={`p-6 rounded-3xl border transition-all hover:scale-105 ${
-      isIftar 
-      ? 'bg-gradient-to-br from-[#d4af37]/20 to-transparent border-[#d4af37]/50 shadow-lg shadow-[#d4af37]/10' 
-      : isFajr
-      ? 'bg-gradient-to-br from-orange-500/20 to-transparent border-orange-500/50 shadow-lg'
-      : 'glass border-white/10'
+    <div className={`p-6 md:p-8 rounded-[2rem] border transition-all hover:scale-105 ${
+      isSpecial ? 'bg-[#d4af37]/15 border-[#d4af37]/50 shadow-xl ring-2 ring-[#d4af37]/20' : 'glass border-white/10'
     }`}>
-      <div className="text-gray-400 text-xs mb-3 font-medium">{name}</div>
-      <div className={`text-2xl font-bold font-mono ${isIftar ? 'text-[#d4af37]' : isFajr ? 'text-orange-500' : 'text-white'}`}>
+      <div className="text-gray-400 text-xs md:text-sm mb-3 md:mb-4 font-bold uppercase tracking-wider">{name}</div>
+      <div className={`text-2xl md:text-3xl font-bold font-mono ${isSpecial ? 'text-[#d4af37]' : 'text-white'}`}>
         {time}
       </div>
     </div>

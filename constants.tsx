@@ -2,6 +2,7 @@
 import React from 'react';
 
 export const API_BASE = 'https://api.aladhan.com/v1';
+export const QURAN_API = 'https://api.alquran.cloud/v1';
 
 export const DEFAULT_SETTINGS = {
   country: 'Saudi Arabia',
@@ -12,31 +13,52 @@ export const DEFAULT_SETTINGS = {
   minutesBeforeIftar: 10,
   minutesBeforeImsak: 10,
   theme: 'dark' as const,
+  adhanSettings: {
+    enabled: true,
+    volume: 0.8,
+    soundId: 'makkah'
+  },
+  quranSettings: {
+    fontSize: 28,
+    highlightActiveAyah: true,
+    autoPlayNext: true,
+    selectedReciter: 'hazza',
+    playbackSpeed: 1,
+    repeatMode: 'off' as const,
+    lastReadSurah: 1,
+    lastReadAyah: 1
+  }
 };
+
+export const ADHAN_SOUNDS = [
+  { id: 'makkah', name: 'أذان مكة المكرمة' },
+  { id: 'madinah', name: 'أذان المدينة المنورة' },
+  { id: 'alaqsa', name: 'أذان المسجد الأقصى' }
+];
 
 export const ARAB_COUNTRIES = [
   { name: 'السعودية', code: 'Saudi Arabia', cities: ['الرياض', 'مكة المكرمة', 'المدينة المنورة', 'جدة', 'الدمام', 'الطائف', 'تبوك', 'أبها'] },
-  { name: 'مصر', code: 'Egypt', cities: ['القاهرة', 'الإسكندرية', 'الجيزة', 'شبرا الخيمة', 'بورسعيد', 'السويس', 'الأقصر', 'أسوان'] },
+  { name: 'مصر', code: 'Egypt', cities: ['القاهرة', 'الإسكندرية', 'الجيزة', 'بورسعيد', 'السويس', 'الأقصر', 'أسوان'] },
+  { name: 'ليبيا', code: 'Libya', cities: ['طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'طبرق', 'سبها', 'درنة', 'الخمس', 'زليتن', 'صبراتة', 'غريان', 'سرت', 'اجدابيا'] },
   { name: 'الإمارات', code: 'United Arab Emirates', cities: ['أبو ظبي', 'دبي', 'الشارقة', 'عجمان', 'رأس الخيمة', 'الفجيرة', 'العين'] },
-  { name: 'الكويت', code: 'Kuwait', cities: ['الكويت', 'الأحمدي', 'حولي', 'السالمية', 'الفروانية'] },
-  { name: 'قطر', code: 'Qatar', cities: ['الدوحة', 'الريان', 'الوكرة', 'الخور', 'لوسيل'] },
-  { name: 'عمان', code: 'Oman', cities: ['مسقط', 'صلالة', 'نزوى', 'صحار', 'صور'] },
+  { name: 'الكويت', code: 'Kuwait', cities: ['الكويت', 'الأحمدي', 'حولي', 'السالمية', 'الجهراء'] },
+  { name: 'قطر', code: 'Qatar', cities: ['الدوحة', 'الريان', 'الوكرة', 'الخور'] },
+  { name: 'عمان', code: 'Oman', cities: ['مسقط', 'صلالة', 'نزوى', 'صحار'] },
   { name: 'البحرين', code: 'Bahrain', cities: ['المنامة', 'المحرق', 'الرفاع', 'مدينة حمد'] },
-  { name: 'الأردن', code: 'Jordan', cities: ['عمان', 'إربد', 'الزرقاء', 'العقبة', 'مادبا'] },
-  { name: 'فلسطين', code: 'Palestine', cities: ['القدس', 'غزة', 'رام الله', 'نابلس', 'الخليل', 'جنين', 'بيت لحم'] },
-  { name: 'لبنان', code: 'Lebanon', cities: ['بيروت', 'طرابلس', 'صيدا', 'صور', 'بعلبك'] },
-  { name: 'سوريا', code: 'Syria', cities: ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'حماة', 'طرطوس'] },
-  { name: 'العراق', code: 'Iraq', cities: ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'النجف', 'كربلاء'] },
-  { name: 'اليمن', code: 'Yemen', cities: ['صنعاء', 'عدن', 'تعز', 'الحديدة', 'المكلا'] },
-  { name: 'المغرب', code: 'Morocco', cities: ['الرباط', 'الدار البيضاء', 'مراكش', 'فاس', 'طنجة', 'أكادير'] },
-  { name: 'الجزائر', code: 'Algeria', cities: ['الجزائر', 'وهران', 'قسنطينة', 'عنابة', 'سطيف'] },
-  { name: 'تونس', code: 'Tunisia', cities: ['تونس', 'صفاقس', 'سوسة', 'القيروان', 'بنزرت'] },
-  { name: 'ليبيا', code: 'Libya', cities: ['طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'طبرق'] },
+  { name: 'الأردن', code: 'Jordan', cities: ['عمان', 'إربد', 'الزرقاء', 'العقبة'] },
+  { name: 'فلسطين', code: 'Palestine', cities: ['القدس', 'غزة', 'رام الله', 'نابلس', 'الخليل'] },
+  { name: 'لبنان', code: 'Lebanon', cities: ['بيروت', 'طرابلس', 'صيدا', 'صور'] },
+  { name: 'سوريا', code: 'Syria', cities: ['دمشق', 'حلب', 'حمص', 'اللاذقية'] },
+  { name: 'العراق', code: 'Iraq', cities: ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'النجف'] },
+  { name: 'اليمن', code: 'Yemen', cities: ['صنعاء', 'عدن', 'تعز', 'المكلا'] },
+  { name: 'المغرب', code: 'Morocco', cities: ['الرباط', 'الدار البيضاء', 'مراكش', 'فاس', 'طنجة'] },
+  { name: 'الجزائر', code: 'Algeria', cities: ['الجزائر', 'وهران', 'قسنطينة', 'عنابة'] },
+  { name: 'تونس', code: 'Tunisia', cities: ['تونس', 'صفاقس', 'سوسة', 'القيروان'] },
   { name: 'السودان', code: 'Sudan', cities: ['الخرطوم', 'أم درمان', 'بورتسودان', 'كسلا'] },
-  { name: 'موريتانيا', code: 'Mauritania', cities: ['نواكشوط', 'نواذيبو', 'كيهيدي'] },
-  { name: 'جيبوتي', code: 'Djibouti', cities: ['جيبوتي', 'علي صبيح', 'تاجورة'] },
-  { name: 'الصومال', code: 'Somalia', cities: ['مقديشو', 'هرجيسا', 'بوساسو'] },
-  { name: 'جزر القمر', code: 'Comoros', cities: ['موروني', 'موتسامودو', 'فومبوني'] },
+  { name: 'موريتانيا', code: 'Mauritania', cities: ['نواكشوط', 'نواذيبو'] },
+  { name: 'جيبوتي', code: 'Djibouti', cities: ['جيبوتي'] },
+  { name: 'الصومال', code: 'Somalia', cities: ['مقديشو', 'هرجيسا'] },
+  { name: 'جزر القمر', code: 'Comoros', cities: ['موروني'] },
 ];
 
 export const CALCULATION_METHODS = [
@@ -45,7 +67,15 @@ export const CALCULATION_METHODS = [
   { id: 3, name: 'رابطة العالم الإسلامي' },
   { id: 4, name: 'جامعة أم القرى، مكة' },
   { id: 5, name: 'الهيئة المصرية العامة للمساحة' },
+  { id: 8, name: 'منطقة الخليج' },
+  { id: 9, name: 'الكويت' },
+  { id: 10, name: 'قطر' },
+  { id: 11, name: 'مجلس علماء سنغافورة' },
+  { id: 12, name: 'اتحاد المنظمات الإسلامية في فرنسا' },
   { id: 13, name: 'رئاسة الشؤون الدينية التركية' },
+  { id: 14, name: 'الإدارة الدينية لمسلمي روسيا' },
+  { id: 16, name: 'دبي (الإمارات)' },
+  { id: 21, name: 'وزارة الأوقاف والشؤون الإسلامية (المغرب)' },
 ];
 
 export const PRAYER_NAMES: Record<string, string> = {
@@ -56,10 +86,4 @@ export const PRAYER_NAMES: Record<string, string> = {
   Maghrib: 'المغرب (الإفطار)',
   Isha: 'العشاء',
   Imsak: 'الإمساك',
-};
-
-export const ICON_PATHS = {
-  Fajr: <path d="M12 2v2M5 5l1.5 1.5M2 12h2M5 19l1.5-1.5M12 22v-2M19 19l-1.5-1.5M22 12h-2M19 5l-1.5 1.5M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />,
-  Imsak: <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />,
-  Maghrib: <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />,
 };

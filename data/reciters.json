@@ -1,0 +1,17 @@
+
+[
+  {
+    "id": "hazza",
+    "name_ar": "هزاع البلوشي",
+    "type": "ayah",
+    "base_url": "https://everyayah.com/data/Hazza_Al_Blushi_128kbps",
+    "file_pattern": "{surah3}{ayah3}.mp3"
+  },
+  {
+    "id": "islam",
+    "name_ar": "إسلام صبحي",
+    "type": "ayah",
+    "base_url": "https://everyayah.com/data/Islam_Sobhi_128kbps",
+    "file_pattern": "{surah3}{ayah3}.mp3"
+  }
+]
